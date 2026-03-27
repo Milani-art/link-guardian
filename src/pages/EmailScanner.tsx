@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { Mail, Search, Link2, Shield } from "lucide-react";
+import { Mail, Search, Link2, AlertTriangle, ShieldAlert, MessageSquareWarning } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import RiskBadge from "@/components/RiskBadge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { analyzeURL, ScanResult } from "@/lib/detector";
+import { analyzeURL, analyzeEmailContent, ScanResult, EmailAnalysis } from "@/lib/detector";
 import { addScan } from "@/lib/scan-store";
 import { cn } from "@/lib/utils";
 
-// Extract URLs from text
 function extractURLs(text: string): string[] {
   const urlRegex = /https?:\/\/[^\s<>"')\]]+/gi;
   const matches = text.match(urlRegex) || [];
@@ -18,6 +17,7 @@ function extractURLs(text: string): string[] {
 const EmailScanner = () => {
   const [content, setContent] = useState("");
   const [results, setResults] = useState<ScanResult[]>([]);
+  const [emailAnalysis, setEmailAnalysis] = useState<EmailAnalysis | null>(null);
   const [scanned, setScanned] = useState(false);
 
   const handleScan = () => {
@@ -28,12 +28,22 @@ const EmailScanner = () => {
       return r;
     });
     setResults(scans);
+    setEmailAnalysis(analyzeEmailContent(content));
     setScanned(true);
   };
 
   const dangerCount = results.filter(r => r.level === 'danger').length;
   const warningCount = results.filter(r => r.level === 'warning').length;
   const safeCount = results.filter(r => r.level === 'safe').length;
+
+  // Overall verdict combines email body + link analysis
+  const overallLevel = emailAnalysis
+    ? emailAnalysis.level === 'danger' || dangerCount > 0
+      ? 'danger'
+      : emailAnalysis.level === 'warning' || warningCount > 0
+        ? 'warning'
+        : 'safe'
+    : 'safe';
 
   return (
     <div className="min-h-screen pb-20">
@@ -42,7 +52,7 @@ const EmailScanner = () => {
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Mail className="w-4 h-4" />
-            <span>Paste email content to scan all links</span>
+            <span>Paste email content to scan for phishing</span>
           </div>
           <Textarea
             value={content}
@@ -52,16 +62,54 @@ const EmailScanner = () => {
           />
           <Button onClick={handleScan} className="w-full h-12 text-base font-semibold glow-primary" disabled={!content.trim()}>
             <Search className="w-5 h-5 mr-2" />
-            Scan Email Links
+            Scan Email
           </Button>
         </div>
 
         {scanned && (
           <>
-            {/* Summary */}
+            {/* Email Body Analysis */}
+            {emailAnalysis && emailAnalysis.findings.length > 0 && (
+              <div className={cn(
+                "border rounded-xl p-4 space-y-3",
+                emailAnalysis.level === 'danger' ? "bg-destructive/5 border-destructive/40" :
+                emailAnalysis.level === 'warning' ? "bg-amber-500/5 border-amber-500/40" :
+                "bg-card border-border"
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {emailAnalysis.level === 'danger' ? (
+                      <ShieldAlert className="w-5 h-5 text-destructive" />
+                    ) : (
+                      <MessageSquareWarning className="w-5 h-5 text-amber-400" />
+                    )}
+                    <span className="text-sm font-semibold">
+                      {emailAnalysis.level === 'danger' ? 'Phishing Email Detected' :
+                       emailAnalysis.level === 'warning' ? 'Suspicious Email Content' :
+                       'Email Content Analysis'}
+                    </span>
+                  </div>
+                  <RiskBadge level={emailAnalysis.level} score={emailAnalysis.riskScore} />
+                </div>
+                <div className="space-y-2">
+                  {emailAnalysis.findings.map((f, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <AlertTriangle className={cn(
+                        "w-3.5 h-3.5 mt-0.5 flex-shrink-0",
+                        f.severity === 'high' ? "text-destructive" :
+                        f.severity === 'medium' ? "text-amber-400" : "text-muted-foreground"
+                      )} />
+                      <p className="text-xs text-muted-foreground">{f.message}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Link Summary */}
             <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold">Scan Summary</span>
+                <span className="text-sm font-semibold">Link Scan Summary</span>
                 <span className="text-xs text-muted-foreground font-mono">{results.length} link{results.length !== 1 ? 's' : ''} found</span>
               </div>
               {results.length === 0 ? (
@@ -87,7 +135,7 @@ const EmailScanner = () => {
               )}
             </div>
 
-            {/* Results */}
+            {/* Link Results */}
             {results.length > 0 && (
               <div className="space-y-2">
                 {results.map((r, i) => (
@@ -125,11 +173,15 @@ const EmailScanner = () => {
               </li>
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                We extract and scan every link automatically
+                We analyze the email text for phishing language
               </li>
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                Dangerous links are flagged with detailed findings
+                All embedded links are extracted and scanned
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                Dangerous emails and links are flagged instantly
               </li>
             </ul>
           </div>
