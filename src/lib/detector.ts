@@ -1,6 +1,120 @@
 /**
- * LinkShield Detection Engine (TypeScript port)
+ * Phishara Detection Engine
  */
+
+// Phishing email phrases — triggers warning/danger when found in email body
+const PHISHING_PHRASES_HIGH: string[] = [
+  'your account has been suspended',
+  'your account will be closed',
+  'verify your identity immediately',
+  'confirm your payment information',
+  'unauthorized transaction',
+  'click here to restore access',
+  'your password has expired',
+  'we detected unusual activity',
+  'action required immediately',
+  'failure to verify will result in',
+  'your account has been compromised',
+  'security alert: unauthorized login',
+  'respond within 24 hours or',
+  'click below to avoid suspension',
+  'we will suspend your account',
+  'your payment was declined',
+  'confirm your social security',
+  'provide your credit card details',
+  'wire transfer request',
+  'send gift cards',
+];
+
+const PHISHING_PHRASES_MEDIUM: string[] = [
+  'act now',
+  'limited time offer',
+  'you have been selected',
+  'congratulations you won',
+  'click here',
+  'do not share this email',
+  'dear customer',
+  'dear valued member',
+  'dear user',
+  'verify your account',
+  'update your information',
+  'confirm your details',
+  'reset your password',
+  'unusual sign-in activity',
+  'prize claim',
+  'free gift',
+  'risk free',
+  'no obligation',
+  'winner notification',
+  'inheritance fund',
+];
+
+export interface EmailAnalysis {
+  riskScore: number;
+  level: 'safe' | 'warning' | 'danger';
+  findings: Finding[];
+}
+
+export function analyzeEmailContent(text: string): EmailAnalysis {
+  const findings: Finding[] = [];
+  let riskScore = 0;
+  const lower = text.toLowerCase();
+
+  // Check high-severity phishing phrases
+  const highMatches = PHISHING_PHRASES_HIGH.filter(p => lower.includes(p));
+  if (highMatches.length > 0) {
+    findings.push({
+      type: 'phishing_language',
+      severity: 'high',
+      message: `Dangerous phishing phrases detected: "${highMatches[0]}"${highMatches.length > 1 ? ` (+${highMatches.length - 1} more)` : ''}`
+    });
+    riskScore += Math.min(highMatches.length * 20, 60);
+  }
+
+  // Check medium-severity phrases
+  const medMatches = PHISHING_PHRASES_MEDIUM.filter(p => lower.includes(p));
+  if (medMatches.length > 0) {
+    findings.push({
+      type: 'suspicious_language',
+      severity: 'medium',
+      message: `Suspicious phrases: "${medMatches[0]}"${medMatches.length > 1 ? ` (+${medMatches.length - 1} more)` : ''}`
+    });
+    riskScore += Math.min(medMatches.length * 10, 30);
+  }
+
+  // Urgency pressure tactics (ALL CAPS, excessive exclamation marks)
+  const capsWords = text.match(/\b[A-Z]{4,}\b/g) || [];
+  if (capsWords.length >= 3) {
+    findings.push({ type: 'urgency_caps', severity: 'medium', message: `Excessive capitalization used for pressure (${capsWords.length} words)` });
+    riskScore += 15;
+  }
+
+  const exclamations = (text.match(/!/g) || []).length;
+  if (exclamations >= 5) {
+    findings.push({ type: 'urgency_exclamation', severity: 'low', message: `Excessive exclamation marks (${exclamations})` });
+    riskScore += 10;
+  }
+
+  // Spoofed brand mentions in email body
+  const brandMentions = SPOOFED_BRANDS.filter(b => lower.includes(b));
+  if (brandMentions.length > 0 && (highMatches.length > 0 || medMatches.length > 0)) {
+    findings.push({
+      type: 'brand_impersonation',
+      severity: 'high',
+      message: `References ${brandMentions.join(', ')} alongside phishing language`
+    });
+    riskScore += 25;
+  }
+
+  riskScore = Math.min(riskScore, 100);
+
+  let level: EmailAnalysis['level'];
+  if (riskScore >= 60) level = 'danger';
+  else if (riskScore >= 30) level = 'warning';
+  else level = 'safe';
+
+  return { riskScore, level, findings };
+}
 
 const SUSPICIOUS_TLDS = [
   '.xyz', '.top', '.club', '.work', '.click', '.link', '.gq', '.ml',
