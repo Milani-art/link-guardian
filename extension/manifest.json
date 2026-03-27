@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "LinkShield",
+  "name": "Phishara",
   "version": "1.0.0",
   "description": "Scans links in real-time and warns or blocks suspicious ones before you click them.",
   "permissions": ["activeTab", "storage"],

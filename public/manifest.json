@@ -1,6 +1,6 @@
 {
-  "name": "LinkShield",
-  "short_name": "LinkShield",
+  "name": "Phishara",
+  "short_name": "Phishara",
   "description": "Scan links in real-time and protect yourself from phishing & scam URLs",
   "start_url": "/",
   "display": "standalone",

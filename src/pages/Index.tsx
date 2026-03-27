@@ -21,7 +21,7 @@ const detections = [
 ];
 
 const handleDownload = () => {
-  fetch("/linkshield-extension.zip")
+  fetch("/phishara-extension.zip")
     .then((res) => {
       if (!res.ok) throw new Error(`Download failed: ${res.status}`);
       return res.blob();
@@ -29,7 +29,7 @@ const handleDownload = () => {
     .then((blob) => {
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "linkshield-extension.zip";
+      a.download = "phishara-extension.zip";
       a.click();
       URL.revokeObjectURL(a.href);
     })
@@ -48,7 +48,7 @@ const Index = () => {
             <span className="text-sm text-muted-foreground">Chrome Extension · Manifest V3</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-bold font-heading tracking-tight mb-6">
-            <span className="text-gradient-primary">LinkShield</span>
+            <span className="text-gradient-primary">Phishara</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             Scans links in real-time and warns or blocks suspicious ones{" "}
@@ -135,7 +135,7 @@ const Index = () => {
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-primary" />
-            <span className="font-heading font-semibold">LinkShield</span>
+            <span className="font-heading font-semibold">Phishara</span>
           </div>
           <p className="text-sm text-muted-foreground">Proactive protection against phishing & scam links.</p>
         </div>

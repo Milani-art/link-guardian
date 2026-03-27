@@ -1,4 +1,4 @@
-// LinkShield Popup Script
+// Phishara Popup Script
 
 const toggleEnabled = document.getElementById('toggle-enabled');
 const toggleBlock = document.getElementById('toggle-block');
