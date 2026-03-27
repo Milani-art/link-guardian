@@ -1,5 +1,5 @@
 /**
- * LinkShield Content Script
+ * Phishara Content Script
  * Scans all links on the page and adds visual warnings.
  */
 
@@ -62,7 +62,7 @@
     tooltip.innerHTML = `
       <div class="linkshield-tooltip-header">
         <span class="linkshield-icon">${result.level === 'danger' ? '🛑' : '⚠️'}</span>
-        <strong>LinkShield ${result.level === 'danger' ? 'DANGER' : 'Warning'}</strong>
+        <strong>Phishara ${result.level === 'danger' ? 'DANGER' : 'Warning'}</strong>
         <span class="linkshield-score">Risk: ${result.riskScore}/100</span>
       </div>
       <ul class="linkshield-findings">
@@ -97,7 +97,7 @@
     modal.innerHTML = `
       <div class="linkshield-modal">
         <div class="linkshield-modal-icon">🛑</div>
-        <h2>Link Blocked by LinkShield</h2>
+        <h2>Link Blocked by Phishara</h2>
         <p class="linkshield-modal-url">${url.substring(0, 80)}${url.length > 80 ? '...' : ''}</p>
         <p>This link scored <strong>${result.riskScore}/100</strong> risk and has been blocked for your safety.</p>
         <ul>

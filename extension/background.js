@@ -1,4 +1,4 @@
-// LinkShield Background Service Worker
+// Phishara Background Service Worker
 // Initializes default settings on install
 
 chrome.runtime.onInstalled.addListener(() => {

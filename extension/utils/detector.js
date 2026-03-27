@@ -1,5 +1,5 @@
 /**
- * LinkShield Detection Engine
+ * Phishara Detection Engine
  * Analyzes URLs for phishing indicators and assigns safety scores.
  */
 

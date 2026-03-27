@@ -7,7 +7,7 @@ const AppHeader = ({ title }: { title?: string }) => (
         <Shield className="w-5 h-5 text-primary" />
       </div>
       <h1 className="text-lg font-bold font-heading">
-        {title || <span className="text-gradient-primary">LinkShield</span>}
+        {title || <span className="text-gradient-primary">Phishara</span>}
       </h1>
     </div>
   </header>
