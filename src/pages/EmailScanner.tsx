@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Mail, Search, Link2, AlertTriangle, ShieldAlert, MessageSquareWarning } from "lucide-react";
+import { Mail, Search, Link2, AlertTriangle, ShieldAlert, MessageSquareWarning, FileText } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import RiskBadge from "@/components/RiskBadge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { analyzeURL, analyzeEmailContent, ScanResult, EmailAnalysis } from "@/lib/detector";
+import { analyzeEmailHeaders, containsHeaders, HeaderAnalysis } from "@/lib/email-header-analyzer";
 import { addScan } from "@/lib/scan-store";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ const EmailScanner = () => {
   const [content, setContent] = useState("");
   const [results, setResults] = useState<ScanResult[]>([]);
   const [emailAnalysis, setEmailAnalysis] = useState<EmailAnalysis | null>(null);
+  const [headerAnalysis, setHeaderAnalysis] = useState<HeaderAnalysis | null>(null);
   const [scanned, setScanned] = useState(false);
 
   const handleScan = () => {
@@ -29,6 +31,7 @@ const EmailScanner = () => {
     });
     setResults(scans);
     setEmailAnalysis(analyzeEmailContent(content));
+    setHeaderAnalysis(analyzeEmailHeaders(content));
     setScanned(true);
   };
 
@@ -36,14 +39,14 @@ const EmailScanner = () => {
   const warningCount = results.filter(r => r.level === 'warning').length;
   const safeCount = results.filter(r => r.level === 'safe').length;
 
-  // Overall verdict combines email body + link analysis
-  const overallLevel = emailAnalysis
-    ? emailAnalysis.level === 'danger' || dangerCount > 0
-      ? 'danger'
-      : emailAnalysis.level === 'warning' || warningCount > 0
-        ? 'warning'
-        : 'safe'
-    : 'safe';
+  // Overall verdict combines email body + header + link analysis
+  const overallLevel = (() => {
+    const headerDanger = headerAnalysis?.level === 'danger';
+    const headerWarning = headerAnalysis?.level === 'warning';
+    if (emailAnalysis?.level === 'danger' || dangerCount > 0 || headerDanger) return 'danger';
+    if (emailAnalysis?.level === 'warning' || warningCount > 0 || headerWarning) return 'warning';
+    return 'safe';
+  })();
 
   return (
     <div className="min-h-screen pb-20">
@@ -106,7 +109,43 @@ const EmailScanner = () => {
               </div>
             )}
 
-            {/* Link Summary */}
+            {/* Email Header Analysis */}
+            {headerAnalysis && headerAnalysis.findings.length > 0 && (
+              <div className={cn(
+                "border rounded-xl p-4 space-y-3",
+                headerAnalysis.level === 'danger' ? "bg-destructive/5 border-destructive/40" :
+                headerAnalysis.level === 'warning' ? "bg-amber-500/5 border-amber-500/40" :
+                "bg-card border-border"
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className={cn(
+                      "w-5 h-5",
+                      headerAnalysis.level === 'danger' ? "text-destructive" : "text-amber-400"
+                    )} />
+                    <span className="text-sm font-semibold">
+                      {headerAnalysis.level === 'danger' ? 'Suspicious Email Headers' :
+                       headerAnalysis.level === 'warning' ? 'Header Anomalies Detected' :
+                       'Header Analysis'}
+                    </span>
+                  </div>
+                  <RiskBadge level={headerAnalysis.level} score={headerAnalysis.riskScore} />
+                </div>
+                <div className="space-y-2">
+                  {headerAnalysis.findings.map((f, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <AlertTriangle className={cn(
+                        "w-3.5 h-3.5 mt-0.5 flex-shrink-0",
+                        f.severity === 'high' ? "text-destructive" :
+                        f.severity === 'medium' ? "text-amber-400" : "text-muted-foreground"
+                      )} />
+                      <p className="text-xs text-muted-foreground">{f.message}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-semibold">Link Scan Summary</span>
@@ -170,6 +209,10 @@ const EmailScanner = () => {
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
                 Paste the full email body text
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                Email headers are checked for sender spoofing
               </li>
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
