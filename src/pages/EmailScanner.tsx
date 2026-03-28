@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Mail, Search, Link2, AlertTriangle, ShieldAlert, MessageSquareWarning } from "lucide-react";
+import { Mail, Search, Link2, AlertTriangle, ShieldAlert, MessageSquareWarning, FileText } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import RiskBadge from "@/components/RiskBadge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { analyzeURL, analyzeEmailContent, ScanResult, EmailAnalysis } from "@/lib/detector";
+import { analyzeEmailHeaders, containsHeaders, HeaderAnalysis } from "@/lib/email-header-analyzer";
 import { addScan } from "@/lib/scan-store";
 import { cn } from "@/lib/utils";
 
