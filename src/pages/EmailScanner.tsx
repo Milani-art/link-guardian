@@ -212,6 +212,10 @@ const EmailScanner = () => {
               </li>
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                Email headers are checked for sender spoofing
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
                 We analyze the email text for phishing language
               </li>
               <li className="flex items-start gap-2">
