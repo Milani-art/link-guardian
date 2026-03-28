@@ -109,7 +109,43 @@ const EmailScanner = () => {
               </div>
             )}
 
-            {/* Link Summary */}
+            {/* Email Header Analysis */}
+            {headerAnalysis && headerAnalysis.findings.length > 0 && (
+              <div className={cn(
+                "border rounded-xl p-4 space-y-3",
+                headerAnalysis.level === 'danger' ? "bg-destructive/5 border-destructive/40" :
+                headerAnalysis.level === 'warning' ? "bg-amber-500/5 border-amber-500/40" :
+                "bg-card border-border"
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className={cn(
+                      "w-5 h-5",
+                      headerAnalysis.level === 'danger' ? "text-destructive" : "text-amber-400"
+                    )} />
+                    <span className="text-sm font-semibold">
+                      {headerAnalysis.level === 'danger' ? 'Suspicious Email Headers' :
+                       headerAnalysis.level === 'warning' ? 'Header Anomalies Detected' :
+                       'Header Analysis'}
+                    </span>
+                  </div>
+                  <RiskBadge level={headerAnalysis.level} score={headerAnalysis.riskScore} />
+                </div>
+                <div className="space-y-2">
+                  {headerAnalysis.findings.map((f, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <AlertTriangle className={cn(
+                        "w-3.5 h-3.5 mt-0.5 flex-shrink-0",
+                        f.severity === 'high' ? "text-destructive" :
+                        f.severity === 'medium' ? "text-amber-400" : "text-muted-foreground"
+                      )} />
+                      <p className="text-xs text-muted-foreground">{f.message}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-semibold">Link Scan Summary</span>
