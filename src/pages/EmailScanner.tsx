@@ -39,14 +39,14 @@ const EmailScanner = () => {
   const warningCount = results.filter(r => r.level === 'warning').length;
   const safeCount = results.filter(r => r.level === 'safe').length;
 
-  // Overall verdict combines email body + link analysis
-  const overallLevel = emailAnalysis
-    ? emailAnalysis.level === 'danger' || dangerCount > 0
-      ? 'danger'
-      : emailAnalysis.level === 'warning' || warningCount > 0
-        ? 'warning'
-        : 'safe'
-    : 'safe';
+  // Overall verdict combines email body + header + link analysis
+  const overallLevel = (() => {
+    const headerDanger = headerAnalysis?.level === 'danger';
+    const headerWarning = headerAnalysis?.level === 'warning';
+    if (emailAnalysis?.level === 'danger' || dangerCount > 0 || headerDanger) return 'danger';
+    if (emailAnalysis?.level === 'warning' || warningCount > 0 || headerWarning) return 'warning';
+    return 'safe';
+  })();
 
   return (
     <div className="min-h-screen pb-20">
