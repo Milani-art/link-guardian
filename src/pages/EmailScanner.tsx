@@ -19,6 +19,7 @@ const EmailScanner = () => {
   const [content, setContent] = useState("");
   const [results, setResults] = useState<ScanResult[]>([]);
   const [emailAnalysis, setEmailAnalysis] = useState<EmailAnalysis | null>(null);
+  const [headerAnalysis, setHeaderAnalysis] = useState<HeaderAnalysis | null>(null);
   const [scanned, setScanned] = useState(false);
 
   const handleScan = () => {
@@ -30,6 +31,7 @@ const EmailScanner = () => {
     });
     setResults(scans);
     setEmailAnalysis(analyzeEmailContent(content));
+    setHeaderAnalysis(analyzeEmailHeaders(content));
     setScanned(true);
   };
 
